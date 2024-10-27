@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Transaction
 from banktask.customer.models import Customer
 from .serializers import TransactionSerializer, TransactionTransferSerializer, TransactionWithdrawlSerializer
@@ -12,6 +13,7 @@ class WithdrawView(APIView):
     """
     Withdraw funds from a customer's account.
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(request_body=TransactionWithdrawlSerializer)
@@ -47,6 +49,7 @@ class TransferView(APIView):
     """
     Transfer funds from one customer account to another.
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(request_body=TransactionTransferSerializer)
@@ -98,10 +101,41 @@ class TransferView(APIView):
         except Customer.DoesNotExist:
             return Response({"error": "Sender not found."}, status=status.HTTP_404_NOT_FOUND)
 
+class DepositView(APIView):
+    """
+    Deposits funds in a customer's account.
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(request_body=TransactionWithdrawlSerializer)
+    def post(self, request, pk, format=None):
+        try:
+            customer = Customer.objects.get(pk=pk, is_active=1)
+            amount = request.data.get('amount')
+
+            with transaction.atomic():
+                customer.dep = float(customer.dep) + float(amount)
+                customer.save()
+
+                # Create a transaction record
+                Transaction.objects.create(
+                    customer=customer,
+                    transaction_type='deposit',
+                    flow_type='credit',
+                    amount=amount
+                )
+
+            return Response({"message": "Deposited successful."}, status=status.HTTP_200_OK)
+
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer not found."}, status=status.HTTP_404_NOT_FOUND)
+
 class CustomerTransactionHistoryView(APIView):
     """
     View the transaction history of a customer's account.
     """
+    authentication_classes = [JWTAuthentication]  # Specify JWT authentication
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk, format=None):

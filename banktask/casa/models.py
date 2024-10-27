@@ -7,6 +7,7 @@ class Transaction(models.Model):
     TRANSACTION_TYPES = [
         ('withdraw', 'Withdraw'),
         ('transfer', 'Transfer'),
+        ('deposit', 'Deposit'),
     ]
     FLOW_TYPES = [
         ('credit', 'Credit'),
@@ -21,4 +22,4 @@ class Transaction(models.Model):
     rel_customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name='related_transactions')
 
     def __str__(self):
-        return f"{self.transaction_type} - {self.amount} - {self.customer.name}"
+        return f"{self.transaction_type} - {self.flow_type} - {self.amount} - {self.customer.name}"

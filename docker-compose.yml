@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  db:
+  data:
     image: postgres:14
     environment:
       POSTGRES_DB: banktask
@@ -12,7 +12,7 @@ services:
     networks:
       - app-network
 
-  web:
+  bank:
     build: .
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
@@ -24,10 +24,10 @@ services:
       DB_NAME: banktask
       DB_USER: root
       DB_PASSWORD: password@123
-      DB_HOST: db
+      DB_HOST: data
       DB_PORT: 5432
     depends_on:
-      - db
+      - data
     networks:
       - app-network
 

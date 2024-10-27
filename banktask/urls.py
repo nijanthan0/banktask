@@ -22,6 +22,7 @@ from .users import urls as user_url
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -30,20 +31,29 @@ schema_view = get_schema_view(
         description="API documentation for the Banking App",
     ),
     public=True,
+    authentication_classes = [JWTAuthentication],
     permission_classes=(permissions.AllowAny,),
 )
+schema_view._swagger_schema = {
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "Enter 'Bearer ' followed by your token in the text box below.",
+        }
+    },
+    "security": [
+        {"Bearer": []}
+    ],
+}
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('api/', include(cust_url)),
     path('api/', include(casa_url)),
     path('api/', include(user_url)),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
-# urlpatterns = [
-#     path('admin/', admin.site.urls),
-#     path('api/', include('accounts.urls')),  # Include your app's URLs
-#     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-#     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-# ]
